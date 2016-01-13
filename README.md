@@ -13,7 +13,7 @@ The work is purely based on public information and standards by EMVCo. Confident
 
 The project is for learning purposes only (EMV + Clojure) and does not strive to become a working implementation of the full standard.
 
-EMV Tags and CA Public Key listings under /resources are provided by [EFTlab Ltd.](https://www.eftlab.com.au and used with permission.)
+EMV Tags and CA Public Key listings under /resources are provided by [EFTlab Ltd.](https://www.eftlab.com.au) and used with permission.
 
 ## What does it do?
 
