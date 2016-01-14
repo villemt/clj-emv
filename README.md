@@ -1,4 +1,4 @@
-# clj-emv
+# clj-emv [![Build Status](https://travis-ci.org/villemt/clj-emv.svg?branch=master)](https://travis-ci.org/villemt/clj-emv)
 
 EMV compliant terminal implementation in Clojure. Why? For learning EMV and Clojure language.
 
