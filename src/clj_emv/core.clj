@@ -9,6 +9,7 @@
   (:use clj-emv.date)
   (:use clj-emv.sda)
   (:use clj-emv.dda)
+  (:require [clj-emv.restrictions :as restrictions])
   (:require [clj-emv.ui :as ui])
   (:require [clj-time.core :as t])
   (:require [clj-time.format :as f])
@@ -46,4 +47,9 @@
         result (if (:dda-supported aip)
           (perform-dda channel icc-public-key-modulus icc-public-key-exponent nic)
           nil)
-        ]))
+
+        ; Processing Restrictions
+        application-version-number (tag-value-as-number (filter-tag tags APPLICATION_VERSION_NUMBER))
+        tvr (restrictions/check-application-version-number application-version-number)]
+
+  (println "TVR:" tvr)))
