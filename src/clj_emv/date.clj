@@ -13,3 +13,7 @@
 (defn parse-certificate-expiration-date[string]
   (def date-formatter (f/formatter "MMYY"))
   (f/parse date-formatter string))
+
+(defn print-date[date]
+  (def date-formatter (f/formatter "YYYY-MM-dd"))
+  (f/unparse date-formatter (c/to-date-time date)))

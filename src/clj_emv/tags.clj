@@ -1,7 +1,9 @@
 (ns clj-emv.tags
   "Methods for parsing EMV tags"
   (:use clj-emv.bit-ops)
-  (:use clj-emv.utils))
+  (:use clj-emv.date)
+  (:use clj-emv.utils)
+  (:require [clj-time.coerce :as c]))
 
 (def PSE (vec (string-to-bytes "315041592E5359532E4444463031")))
 
@@ -11,13 +13,18 @@
 
 (def SHORT_FILE_IDENTIFIER 0x88)
 
-(def APPLICATION_INTERCHANGE_PROFILE 0X82)
+(def APPLICATION_INTERCHANGE_PROFILE 0x82)
 (def APPLICATION_FILE_LOCATOR 0x94)
+(def APPLICATION_USAGE_CONTROL 0x9F07)
 (def APPLICATION_VERSION_NUMBER 0x9F08)
+(def APPLICATION_EXPIRATION_DATE 0x5F24)
+(def APPLICATION_EFFECTIVE_DATE 0x5F25)
 
 (def CERTIFICATION_AUTHORITY_PUBLIC_KEY_INDEX 0x8F)
 
 (def PROCESSING_OPTIONS_DATA_OBJECT_LIST 0x9F38)
+
+(def ISSUER_COUNTRY_CODE 0x5F28)
 
 (def ISSUER_PUBLIC_KEY_CERTIFICATE 0x90)
 (def ISSUER_PUBLIC_KEY_EXPONENT 0x9F32)
@@ -271,6 +278,11 @@
   (if (nil? tag)
     nil
     (hex-to-num (bytes-to-hex-string (:value tag)))))
+
+(defn tag-value-as-date[tag]
+  (if (nil? tag)
+    nil
+  (c/to-local-date (parse-date (bytes-to-hex-string (:value tag))))))
 
 (defn response-to-application[apdu]
   (defn- get-tag-value[tag-number]

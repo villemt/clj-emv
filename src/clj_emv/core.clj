@@ -15,7 +15,8 @@
   (:require [clj-time.format :as f])
   (:require [clj-time.coerce :as c])
   (:require [clj-time.local :as l])
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str])
+  (:require [clojure.pprint :as pprint]))
 
 ;;
 ;; MAIN APPLICATION FLOW
@@ -50,6 +51,15 @@
 
         ; Processing Restrictions
         application-version-number (tag-value-as-number (filter-tag tags APPLICATION_VERSION_NUMBER))
-        tvr (restrictions/check-application-version-number application-version-number)]
+        application-usage-control (apply application-usage-control-from-bytes (:value (filter-tag tags APPLICATION_USAGE_CONTROL)))
+        issuer-country-code (filter-tag tags ISSUER_COUNTRY_CODE)
+        application-effective-date (tag-value-as-date (filter-tag tags APPLICATION_EFFECTIVE_DATE))
+        application-expiration-date (tag-value-as-date (filter-tag tags APPLICATION_EXPIRATION_DATE))
+        tvr (ui/check-processing-restrictions application-version-number application-usage-control
+         issuer-country-code application-effective-date application-expiration-date)
 
-  (println "TVR:" tvr)))
+        ; Cardholder Verification
+
+        ]
+  (println "TVR:")
+  (pprint/pprint tvr)))
