@@ -50,3 +50,8 @@
 
   (let [lines (split-lines (get-lines (get-file "tags.csv")))]
     (lines-find-tag lines tag)))
+
+(defn find-country[code]
+  (let [trimmed-code (str/replace-first code #"0+" "")
+        lines (split-lines (get-lines (get-file "countries.csv")))]
+    (second (first (filter #(= (first %) trimmed-code) lines)))))

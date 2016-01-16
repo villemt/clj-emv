@@ -166,18 +166,20 @@
 (defn check-processing-restrictions[
   application-version-number
   application-usage-control
-  issuer-country-code
+  issuer-country-code-tag
   application-effective-date
   application-expiration-date]
   (let [tvr-application-version-number (restrictions/check-application-version-number application-version-number)
-        usage-control-result (restrictions/check-application-usage-control application-usage-control issuer-country-code)
-        tvr-application-dates (restrictions/check-application-dates application-effective-date application-expiration-date)]
+        usage-control-result (restrictions/check-application-usage-control application-usage-control issuer-country-code-tag)
+        tvr-application-dates (restrictions/check-application-dates application-effective-date application-expiration-date)
+        issuer-country-code (utils/bytes-to-hex-string (:value issuer-country-code-tag))
+        issuer-country-name (file/find-country issuer-country-code)]
     (println "Application Version Number:" application-version-number)
 
     (println "\nApplication Usage Control:")
     (pprint/pprint application-usage-control)
 
-    (println "\nIssuer Country Code (hex):" (utils/bytes-to-hex-string (:value issuer-country-code)))
+    (println "\nIssuer Country Code (hex):" issuer-country-code issuer-country-name)
 
     (println "\nApplication Effective Date:" (date/print-date application-effective-date))
     (println "\nApplication Expiration Date:" (date/print-date application-expiration-date))
