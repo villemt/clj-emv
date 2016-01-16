@@ -56,13 +56,26 @@
         issuer-country-code (filter-tag tags ISSUER_COUNTRY_CODE)
         application-effective-date (tag-value-as-date (filter-tag tags APPLICATION_EFFECTIVE_DATE))
         application-expiration-date (tag-value-as-date (filter-tag tags APPLICATION_EXPIRATION_DATE))
-        tvr (ui/check-processing-restrictions application-version-number application-usage-control
+        tvr-restrictions (ui/check-processing-restrictions application-version-number application-usage-control
          issuer-country-code application-effective-date application-expiration-date)
 
         ; Cardholder Verification
         cvm-list-tag (filter-tag tags CARDHOLDER_VERIFICATION_METHOD_LIST)
         currency-tag (filter-tag tags APPLICATION_CURRENCY_CODE)
-        [tvr-cvm tsi] (ui/perform-cvm cvm-list-tag currency-tag)
+        [tvr-cvm tsi-cvm] (ui/perform-cvm cvm-list-tag currency-tag)
+
+        ; Terminal Risk Management
+        lower-consecutive-offline-limit-tag (filter-tag tags LOWER_CONSECUTIVE_OFFLINE_LIMIT)
+        upper-consecutive-offline-limit-tag (filter-tag tags UPPER_CONSECUTIVE_OFFLINE_LIMIT)
+        atc (get-data-command channel 0x9F 0x36)
+        last-online-atc-register (get-data-command channel 0x9F 0x13)
+
+        [tvr-risk-mgmt tsi-risk-mgmt] (ui/perform-terminal-risk-management
+          lower-consecutive-offline-limit-tag upper-consecutive-offline-limit-tag atc last-online-atc-register)
+
+        ; Create final TVR and TSI
+        tvr (merge tvr-restrictions tvr-cvm tvr-risk-mgmt)
+        tsi (merge tsi-cvm tsi-risk-mgmt)
         ]
   (println "TVR:")
   (pprint/pprint tvr)

@@ -1,6 +1,7 @@
 (ns clj-emv.pcsc
   "PC/SC related smart card reader functionality"
   (:require [clj-emv.bit-ops :as bit-ops])
+  (:require [clj-emv.tags :as tags])
   (:import (javax.smartcardio TerminalFactory CommandAPDU)))
 
 ; remove
@@ -37,6 +38,7 @@
    :data (vec (map bit-ops/unsigned (.getData response)))
    :sw1 (.getSW1 response)
    :sw2 (.getSW2 response)
+   :status-description (:status (tags/status-bytes-to-description (.getSW1 response) (.getSW2 response)))
    :success (and (= (.getSW1 response) 0x90) (= (.getSW2 response) 0x00))})
 
 (defn transmit[channel apdu]

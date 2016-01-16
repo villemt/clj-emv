@@ -204,8 +204,20 @@
     [{} {:cardholder-verification-was-performed true}]
   )
 
+(defn perform-terminal-risk-management[lower-consecutive-offline-limit-tag upper-consecutive-offline-limit-tag atc last-online-atc-register]
 
+  ; TODO: Floor Limit check
 
+  ; TODO: Random Transaction Selection, for online processing
 
+  ; Velocity Checking
+  (println "Lower Consecutive Offline Limit:" lower-consecutive-offline-limit-tag)
+  (println "Upper Consecutive Offline Limit:" upper-consecutive-offline-limit-tag)
 
+  (println "ATC:" atc)
+  (println "Last Online ATC Counter:" last-online-atc-register)
 
+  (println-with-stars "Terminal Risk Management completed")
+
+  ; Return TVR and TSI
+  [{} {:terminal-risk-management-was-performed true}])
