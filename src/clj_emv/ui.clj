@@ -1,5 +1,6 @@
 (ns clj-emv.ui
   "Simple text based ui"
+  (:require [clj-emv.cvm :as cvm])
   (:require [clj-emv.date :as date])
   (:require [clj-emv.tags :as tags])
   (:require [clj-emv.utils :as utils])
@@ -186,3 +187,25 @@
 
     (println-with-stars "Processing Restrictions function completed")
     (merge tvr-application-version-number tvr-application-dates)))
+
+(defn perform-cvm[cvm-list-tag currency-tag]
+  (let [cvm (cvm/parse-cvm-list-tag cvm-list-tag currency-tag)]
+
+    (println "Application Currency Code (hex):" (:currency-code cvm))
+    (println "CVM - X: " (:x cvm))
+    (println "CVM - Y: " (:y cvm))
+    (dorun (map pprint/pprint (:rules cvm))))
+
+    ; TODO: validate each rule separately
+
+    (println-with-stars "Cardholder Verification Method (CVM) completed")
+
+    ; Return TVR and TSI
+    [{} {:cardholder-verification-was-performed true}]
+  )
+
+
+
+
+
+

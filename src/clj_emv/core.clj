@@ -11,6 +11,7 @@
   (:use clj-emv.dda)
   (:require [clj-emv.restrictions :as restrictions])
   (:require [clj-emv.ui :as ui])
+  (:require [clj-emv.cvm :as cvm])
   (:require [clj-time.core :as t])
   (:require [clj-time.format :as f])
   (:require [clj-time.coerce :as c])
@@ -59,7 +60,12 @@
          issuer-country-code application-effective-date application-expiration-date)
 
         ; Cardholder Verification
-
+        cvm-list-tag (filter-tag tags CARDHOLDER_VERIFICATION_METHOD_LIST)
+        currency-tag (filter-tag tags APPLICATION_CURRENCY_CODE)
+        [tvr-cvm tsi] (ui/perform-cvm cvm-list-tag currency-tag)
         ]
   (println "TVR:")
-  (pprint/pprint tvr)))
+  (pprint/pprint tvr)
+
+  (println "TSI:")
+  (pprint/pprint tsi)))
