@@ -51,6 +51,10 @@
 
 (def CARDHOLDER_VERIFICATION_METHOD_LIST 0x8E)
 
+(def ISSUER_ACTION_CODE_DEFAULT  0x9F0D)
+(def ISSUER_ACTION_CODE_DENIAL 0x9F0E)
+(def ISSUER_ACTION_CODE_ONLINE 0x9F0F)
+
 (defn is-long-tag?[value]
   (= 0x1F (bit-and 0x1F value)))
 
@@ -289,6 +293,11 @@
   (if (nil? tag)
     nil
   (c/to-local-date (parse-date (bytes-to-hex-string (:value tag))))))
+
+(defn tag-value-as-hex-string[tag]
+  (if (nil? tag)
+    nil
+    (bytes-to-hex-string (:value tag))))
 
 (defn response-to-application[apdu]
   (defn- get-tag-value[tag-number]

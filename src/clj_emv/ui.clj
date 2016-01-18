@@ -221,3 +221,38 @@
 
   ; Return TVR and TSI
   [{} {:terminal-risk-management-was-performed true}])
+
+(defn map-filter[value predicate]
+  (into {} (filter predicate value)))
+
+(defn pprint-if-true[value]
+  (pprint/pprint (map-filter value (fn [[k v]] (true? v)))))
+
+(defn perform-terminal-action-analysis[tvr action-code-default-tag action-code-denial-tag action-code-online-tag]
+  (let [iac-default-str (tags/tag-value-as-hex-string action-code-default-tag)
+        iac-denial-str (tags/tag-value-as-hex-string action-code-denial-tag)
+        iac-online-str (tags/tag-value-as-hex-string action-code-online-tag)
+
+        ;TODO: Add TAC support
+
+        iac-default (apply tags/tvr-from-bytes (:value action-code-default-tag))
+        iac-denial (apply tags/tvr-from-bytes (:value action-code-denial-tag))
+        iac-online (apply tags/tvr-from-bytes (:value action-code-online-tag))]
+
+  (println "Terminal has no online ability. The issuers's conditions to reject the transaction:")
+  (println "Issuer Action Code - Default (hex):" iac-default-str)
+  (pprint-if-true iac-default)
+
+  (println "\nThe issuer's conditions to reject the transaction:")
+  (println "Issuer Action Code - Denial (hex):" iac-denial-str)
+  (pprint-if-true iac-denial)
+
+  (println "\nThe issuer's conditions to approve the transaction online:")
+  (println "Issuer Action Code - Online (hex):" iac-online-str)
+  (pprint-if-true iac-online)
+
+  ; TODO: compare IACs + TAC with the TVR. Currently, only offline transactions are supported.
+
+  (println-with-stars "Terminal Action Analysis completed")
+
+  ))

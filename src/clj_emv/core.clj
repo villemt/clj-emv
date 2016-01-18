@@ -73,8 +73,16 @@
         [tvr-risk-mgmt tsi-risk-mgmt] (ui/perform-terminal-risk-management
           lower-consecutive-offline-limit-tag upper-consecutive-offline-limit-tag atc last-online-atc-register)
 
-        ; Create final TVR and TSI
+        ; Create final TVR
         tvr (merge tvr-restrictions tvr-cvm tvr-risk-mgmt)
+
+        ; Terminal Action Analysis
+        action-code-default-tag (filter-tag tags ISSUER_ACTION_CODE_DEFAULT)
+        action-code-denial-tag (filter-tag tags ISSUER_ACTION_CODE_DENIAL)
+        action-code-online-tag (filter-tag tags ISSUER_ACTION_CODE_ONLINE)
+        result (ui/perform-terminal-action-analysis tvr action-code-default-tag action-code-denial-tag action-code-online-tag)
+
+        ; Create final TSI
         tsi (merge tsi-cvm tsi-risk-mgmt)
         ]
   (println "TVR:")
