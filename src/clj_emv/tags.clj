@@ -3,7 +3,8 @@
   (:use clj-emv.bit-ops)
   (:use clj-emv.date)
   (:use clj-emv.utils)
-  (:require [clj-time.coerce :as c]))
+  (:require [clj-time.coerce :as c])
+  (:require [clj-emv.file :as file]))
 
 (def PSE (vec (string-to-bytes "315041592E5359532E4444463031")))
 
@@ -12,6 +13,8 @@
 (def COMMAND_TEMPLATE 0x83)
 
 (def SHORT_FILE_IDENTIFIER 0x88)
+
+(def CARD_RISK_MANAGEMENT_DATA_OBJECT_LIST_1 0x8C)
 
 (def APPLICATION_INTERCHANGE_PROFILE 0x82)
 (def APPLICATION_FILE_LOCATOR 0x94)
@@ -321,3 +324,18 @@
     (if (nil? pdol-tag)
       [COMMAND_TEMPLATE 0x00]
       (into [] (concat [COMMAND_TEMPLATE (:length pdol-tag)] (repeat (:length pdol-tag) 0x00))))))
+
+
+(defn get-dol-tags[dol-bytes]
+  (defn loop-dol-bytes[tags dol-bytes]
+    (let [parsed (parse-tlv-bytes dol-bytes)]
+      (if (not (nil? parsed))
+        (let [object-tag-number (:tag parsed)
+              object-tag-length (:tag-length parsed)
+              object-length (:length parsed)
+              tag-name (hexify object-tag-number)
+              tag-info (file/find-tag-info object-tag-number)
+              tag {:tag-number object-tag-number :object-length object-length :tag-info tag-info}]
+          (loop-dol-bytes (cons tag tags) (drop (+ object-tag-length 1) dol-bytes)))
+        tags)))
+  (loop-dol-bytes '() dol-bytes))

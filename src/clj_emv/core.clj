@@ -80,7 +80,8 @@
         action-code-default-tag (filter-tag tags ISSUER_ACTION_CODE_DEFAULT)
         action-code-denial-tag (filter-tag tags ISSUER_ACTION_CODE_DENIAL)
         action-code-online-tag (filter-tag tags ISSUER_ACTION_CODE_ONLINE)
-        result (ui/perform-terminal-action-analysis tvr action-code-default-tag action-code-denial-tag action-code-online-tag)
+        cdol1-tag (filter-tag tags CARD_RISK_MANAGEMENT_DATA_OBJECT_LIST_1)
+        result (ui/perform-terminal-action-analysis tvr action-code-default-tag action-code-denial-tag action-code-online-tag cdol1-tag)
 
         ; Create final TSI
         tsi (merge tsi-cvm tsi-risk-mgmt)

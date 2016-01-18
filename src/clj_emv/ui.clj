@@ -1,5 +1,6 @@
 (ns clj-emv.ui
   "Simple text based ui"
+  (:require [clj-emv.action-analysis :as action-analysis])
   (:require [clj-emv.cvm :as cvm])
   (:require [clj-emv.date :as date])
   (:require [clj-emv.tags :as tags])
@@ -228,7 +229,7 @@
 (defn pprint-if-true[value]
   (pprint/pprint (map-filter value (fn [[k v]] (true? v)))))
 
-(defn perform-terminal-action-analysis[tvr action-code-default-tag action-code-denial-tag action-code-online-tag]
+(defn perform-terminal-action-analysis[tvr action-code-default-tag action-code-denial-tag action-code-online-tag cdol1-tag]
   (let [iac-default-str (tags/tag-value-as-hex-string action-code-default-tag)
         iac-denial-str (tags/tag-value-as-hex-string action-code-denial-tag)
         iac-online-str (tags/tag-value-as-hex-string action-code-online-tag)
@@ -252,6 +253,8 @@
   (pprint-if-true iac-online)
 
   ; TODO: compare IACs + TAC with the TVR. Currently, only offline transactions are supported.
+
+  (action-analysis/generate-ac-data cdol1-tag)
 
   (println-with-stars "Terminal Action Analysis completed")
 
