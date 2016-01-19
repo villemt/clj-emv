@@ -4,6 +4,7 @@
   (:use clj-emv.date)
   (:use clj-emv.utils)
   (:require [clj-time.coerce :as c])
+  (:require [clj-emv.terminal :as terminal])
   (:require [clj-emv.file :as file]))
 
 (def PSE (vec (string-to-bytes "315041592E5359532E4444463031")))
@@ -180,6 +181,7 @@
     :cardholder-verification-supported 5
     :terminal-risk-management-to-be-performed 4
     :issuer-authentication-supported 3
+    :on-device-cardholder-verification-is-supported 2 ; Kernel 2
     :cda-supported 1})
   (def aip-byte2-bits {})
   (merge
@@ -318,13 +320,6 @@
      :priority (get-tag-value APPLICATION_PRIORITY_INDICATOR)
      :preferred-name (bytes-to-ascii preferred-name)}))
 
-;; TODO: create the real PDOL based on the FCI template information, currently returns all zeros
-(defn get-pdol[application-response]
-  (let [pdol-tag (get-tag application-response PROCESSING_OPTIONS_DATA_OBJECT_LIST)]
-    (if (nil? pdol-tag)
-      [COMMAND_TEMPLATE 0x00]
-      (into [] (concat [COMMAND_TEMPLATE (:length pdol-tag)] (repeat (:length pdol-tag) 0x00))))))
-
 
 (defn get-dol-tags[dol-bytes]
   (defn loop-dol-bytes[tags dol-bytes]
@@ -336,6 +331,27 @@
               tag-name (hexify object-tag-number)
               tag-info (file/find-tag-info object-tag-number)
               tag {:tag-number object-tag-number :object-length object-length :tag-info tag-info}]
-          (loop-dol-bytes (cons tag tags) (drop (+ object-tag-length 1) dol-bytes)))
+          (loop-dol-bytes (conj tags tag) (drop (+ object-tag-length 1) dol-bytes)))
         tags)))
-  (loop-dol-bytes '() dol-bytes))
+  (loop-dol-bytes [] dol-bytes))
+
+;; TODO: create the real PDOL based on the FCI template information, currently returns all zeros
+(defn get-pdol[application-response]
+  (defn create-pdol-bytes[pdol-tags]
+    (defn- loop-pdol-tags[bytes tags]
+      (if (empty? tags)
+        bytes
+        (let [tag (first tags)
+              tail-tags (rest tags)
+              ; Support only Terminal Type for now (terminal resident data)
+              tag-bytes (if (= (:object-tag-number tag) terminal/TERMINAL_TYPE) [0x22] (vec (repeat (:object-length tag) 0x00)))]
+          (loop-pdol-tags (concat bytes tag-bytes) tail-tags))))
+    (loop-pdol-tags [] pdol-tags))
+
+  (let [pdol-tag (get-tag application-response PROCESSING_OPTIONS_DATA_OBJECT_LIST)
+        pdol-tags (get-dol-tags (:value pdol-tag))]
+    (if (or (nil? pdol-tag) (empty? pdol-tags))
+      [[COMMAND_TEMPLATE 0x00] pdol-tags]
+      (let [pdol-bytes (create-pdol-bytes pdol-tags)
+            pdol-length (count pdol-bytes)]
+        [(into [] (concat [COMMAND_TEMPLATE pdol-length] pdol-bytes)) pdol-tags]))))

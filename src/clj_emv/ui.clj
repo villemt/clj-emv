@@ -16,6 +16,14 @@
     (println " -> Tag (hex):\t" (utils/hexify tag-number) (:name tag-info))
     (println "    Data (hex):\t" (str (utils/bytes-to-hex-string (:value tag))))))
 
+
+(defn print-dol-tag[dol-tag-info]
+  (let [tag-number (:tag-number dol-tag-info)
+        tag-name (:name (:tag-info dol-tag-info))
+        object-length (:object-length dol-tag-info)]
+  (println " -> Tag (hex):\t" (utils/hexify tag-number) tag-name)
+  (println "    Length:\t" object-length)))
+
 (defn print-response[apdu]
   (let [sw1 (:sw1 apdu)
         sw2 (:sw2 apdu)
@@ -36,7 +44,7 @@
           success (:success response)]
       (if success
         (do
-          (println "READ RECORD - application:")
+          (println "READ RECORD" (str "(SFI: " sfi " REC: " rec ") - application:"))
           (print-response response)))
       (if (not success)
         applications
@@ -126,7 +134,14 @@
   (let [select-response (pcsc/select-command channel (:aid application))]
     (println "SELECT - AID")
     (print-response select-response)
-    (tags/get-pdol select-response)))
+    (let [[pdol pdol-tags] (tags/get-pdol select-response)]
+
+      (println "Card PDOL response tags:")
+      (dorun (map print-dol-tag pdol-tags))
+
+      (println "PDOL Sent to card: " (utils/bytes-to-hex-string pdol))
+
+      pdol)))
 
 (defn initiate-application-process[channel pdol]
   (let [response (pcsc/get-processing-options-command channel pdol)]
@@ -138,9 +153,9 @@
           afl-tag (tags/get-tag response tags/APPLICATION_FILE_LOCATOR)
           partitions (partition 4 (:value afl-tag))
           afls (map #(apply tags/afl-from-bytes %) partitions)]
-      (println "AIP:")
+      (println "AIP (hex):" (utils/bytes-to-hex-string (:value aip-tag)))
       (pprint/pprint aip)
-      (println "AFL:")
+      (println "AFL (hex):" (utils/bytes-to-hex-string (:value afl-tag)))
       (pprint/pprint afls)
 
       [aip (:value aip-tag) afls])))
@@ -229,7 +244,7 @@
 (defn pprint-if-true[value]
   (pprint/pprint (map-filter value (fn [[k v]] (true? v)))))
 
-(defn perform-terminal-action-analysis[tvr action-code-default-tag action-code-denial-tag action-code-online-tag cdol1-tag]
+(defn perform-terminal-action-analysis[channel tvr action-code-default-tag action-code-denial-tag action-code-online-tag cdol1-tag dynamic-number-response]
   (let [iac-default-str (tags/tag-value-as-hex-string action-code-default-tag)
         iac-denial-str (tags/tag-value-as-hex-string action-code-denial-tag)
         iac-online-str (tags/tag-value-as-hex-string action-code-online-tag)
@@ -254,8 +269,17 @@
 
   ; TODO: compare IACs + TAC with the TVR. Currently, only offline transactions are supported.
 
-  (action-analysis/generate-ac-data cdol1-tag)
+  ; Perform Application Cryptogram generation
+  ; TODO: Implement the full AC generation logic. Currently hard-coded to request ARQC from the card without CDA.
+  (let [ac-p1 (action-analysis/generate-ac-p1 :arqc false)
+        ac-data (action-analysis/generate-ac-data cdol1-tag dynamic-number-response)]
 
-  (println-with-stars "Terminal Action Analysis completed")
+    (println "\nCard Risk Management Data Object List 1 (CDOL1) (hex):" (tags/tag-value-as-hex-string cdol1-tag) "\n")
+    (dorun (map print-dol-tag (tags/get-dol-tags (:value cdol1-tag))))
 
-  ))
+    (println "\nGenerate AC Data (hex):" (utils/bytes-to-hex-string ac-data) "\n")
+
+    (let [ac-response (pcsc/generate-ac-command channel ac-p1 ac-data)]
+      (print-response ac-response))
+
+    (println-with-stars "Terminal Action Analysis completed"))))

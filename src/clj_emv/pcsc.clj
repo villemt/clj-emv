@@ -58,10 +58,10 @@
   (transmit channel (CommandAPDU. 0x80 0xCA p1 p2)))
 
 (defn generate-ac-command[channel p1 data]
-  (transmit channel (CommandAPDU. 0x80 0xAE p1 0x00 data)))
+  (transmit channel (CommandAPDU. 0x80 0xAE p1 0x00 (byte-array data))))
 
 (defn get-dynamic-number-command[channel]
-  (transmit channel (CommandAPDU. 0x00 0x84 0x00 0x00)))
+  (transmit channel (CommandAPDU. 0x00 0x84 0x00 0x00 100)))
 
 (defn verify-command[channel p2 data]
   (transmit channel (CommandAPDU. 0x00 0x20 0x00 p2 data)))
