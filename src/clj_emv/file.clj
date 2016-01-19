@@ -4,9 +4,6 @@
   (:require [clojure.string :as str])
   (:require [clojure.java.io :as io]))
 
-(defn get-file[filename]
-  (-> filename io/resource io/file))
-
 (defn get-lines [file]
   (str/split-lines (slurp file)))
 
@@ -29,7 +26,7 @@
         :sha1 (vec (parse-hex-string (nth value 6)))
         :type (nth value 7)
       }))
-  (let [lines (split-lines (get-lines (get-file "keys.csv")))]
+  (let [lines (split-lines (get-lines (io/resource "keys.csv")))]
     (find-key lines (hexify key-index) (hexify-list rid))))
 
 (defn find-tag-info[tag]
@@ -48,10 +45,10 @@
         ;:example (nth value 9)
       }))
 
-  (let [lines (split-lines (get-lines (get-file "tags.csv")))]
+  (let [lines (split-lines (get-lines (io/resource "tags.csv")))]
     (lines-find-tag lines tag)))
 
 (defn find-country[code]
   (let [trimmed-code (str/replace-first code #"0+" "")
-        lines (split-lines (get-lines (get-file "countries.csv")))]
+        lines (split-lines (get-lines (io/resource "countries.csv")))]
     (second (first (filter #(= (first %) trimmed-code) lines)))))
