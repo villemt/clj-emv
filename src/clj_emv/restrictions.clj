@@ -16,7 +16,7 @@
 
 (defn check-application-dates[application-effective-date application-expiration-date]
   (let [today (t/today)
-        effective-date-available (not (nil? application-expiration-date))
+        effective-date-available (not (nil? application-effective-date))
         expiration-date-available (not (nil? application-expiration-date))
         effective-date-not-passed (and effective-date-available (t/before? today application-effective-date))
         expiration-date-passed (and expiration-date-available (t/before? application-expiration-date today))]
