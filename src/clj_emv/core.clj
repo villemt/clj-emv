@@ -89,7 +89,8 @@
           action-code-denial-tag
           action-code-online-tag
           cdol1-tag
-          dynamic-number-response)
+          dynamic-number-response
+          data-authentication-code)
 
         ; Create final TSI
         tsi (merge tsi-cvm tsi-risk-mgmt)

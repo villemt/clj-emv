@@ -244,7 +244,7 @@
 (defn pprint-if-true[value]
   (pprint/pprint (map-filter value (fn [[k v]] (true? v)))))
 
-(defn perform-terminal-action-analysis[channel tvr action-code-default-tag action-code-denial-tag action-code-online-tag cdol1-tag dynamic-number-response]
+(defn perform-terminal-action-analysis[channel tvr action-code-default-tag action-code-denial-tag action-code-online-tag cdol1-tag dynamic-number-response data-authentication-code]
   (let [iac-default-str (tags/tag-value-as-hex-string action-code-default-tag)
         iac-denial-str (tags/tag-value-as-hex-string action-code-denial-tag)
         iac-online-str (tags/tag-value-as-hex-string action-code-online-tag)
@@ -269,10 +269,21 @@
 
   ; TODO: compare IACs + TAC with the TVR. Currently, only offline transactions are supported.
 
+  ; TODO: Ask the amount from the user and generate dynamic values
+  (def transaction-details
+    {0x9F02 [0 0 0 0 0 1]   ;Amount, Authorised
+     0x9F03 [0 0 0 0 0 0]   ;Amount, Other
+     0x95   [0 0 0 0 0]     ;TVR
+     0x9A   [0x16 0x01 0x19];Transaction Date
+     0x9F21 [0 0 0]         ;Transaction time
+     0x9F34 [0 0 0]         ;Cardholder Verification
+     0x9F45 data-authentication-code
+     0x9F4C (:data dynamic-number-response)})
+
   ; Perform Application Cryptogram generation
   ; TODO: Implement the full AC generation logic. Currently hard-coded to request ARQC from the card without CDA.
   (let [ac-p1 (action-analysis/generate-ac-p1 :arqc false)
-        ac-data (action-analysis/generate-ac-data cdol1-tag dynamic-number-response)]
+        ac-data (action-analysis/generate-ac-data cdol1-tag dynamic-number-response transaction-details)]
 
     (println "\nCard Risk Management Data Object List 1 (CDOL1) (hex):" (tags/tag-value-as-hex-string cdol1-tag) "\n")
     (dorun (map print-dol-tag (tags/get-dol-tags (:value cdol1-tag))))
